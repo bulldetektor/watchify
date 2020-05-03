@@ -9,29 +9,31 @@ namespace Watchify.CommandLine
 		public ICommand Command { get; set; }
 		public DirectoryInfo ProjectDir { get; private set; }
 
-		public static CommandLineOptions Parse(string[] args)
+
+		public CommandLineOptions(ConsoleApplication app, RootCommand rootCommand)
 		{
-			var options = new CommandLineOptions();
+			_app = app;
+			_rootCommand = rootCommand;
+		}
 
-			var app = new CommandLineApplication(throwOnUnexpectedArg: false)
-			{
-				Name = "watchify",
-				FullName = "Watch and run dotnet core projects with visual feedback"
-			};
-			app.HelpOption(Constants.HelpOptions);
+		private readonly ConsoleApplication _app;
+		private readonly RootCommand _rootCommand;
 
-			var projectDirInput = app.Option(
+		
+		public CommandLineOptions Parse(string[] args)
+		{
+			var projectDirInput = _app.Option(
 				"-p|--project", 
 				"Path to directory containing the project you want to run and watch (defaults to current directory)",
 				CommandOptionType.SingleValue);
 
-			RootCommand.Configure(app, options);
+			_rootCommand.Configure(this);
 
-			var result = app.Execute(args);
+			var result = _app.Execute(args);
 				
-			options.ProjectDir = GetProjectDir(projectDirInput);
+			ProjectDir = GetProjectDir(projectDirInput);
 
-			return result != 0 ? null : options;
+			return result != 0 ? null : this;
 		}
 
 		private static DirectoryInfo GetProjectDir(CommandOption projectDirInput)

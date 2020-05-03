@@ -1,31 +1,23 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.CommandLineUtils;
 using Watchify.CommandLine;
 
 namespace Watchify.AutoRun
 {
 	public class AutoRunner : ICommand
 	{
-		private readonly CommandLineOptions _options;
+		public string Name => "run";
+		public string Description => "Re-build and run your project when changes are detected";
 
-		public AutoRunner(CommandLineOptions options)
+		
+		public ICommand Configure(CommandLineOptions options)
 		{
 			_options = options;
+			return this;
 		}
 
-		public static void Configure(CommandLineApplication command, CommandLineOptions options)
-		{
-			command.Description = "Re-build and run your project when changes are detected";
-			command.HelpOption(Constants.HelpOptions);
+		private CommandLineOptions _options;
 
-			command.OnExecute(() =>
-			{
-				options.Command = new AutoRunner(options);
-
-				return 0;
-			});
-		}
 
 		public int Run()
 		{
@@ -54,5 +46,6 @@ namespace Watchify.AutoRun
 
 			return 1;
 		}
+
 	}
 }

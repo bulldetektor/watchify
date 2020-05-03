@@ -1,33 +1,55 @@
-﻿using Microsoft.Extensions.CommandLineUtils;
-using Watchify.AutoRun;
+﻿using System.Collections.Generic;
 
 namespace Watchify.CommandLine
 {
 	public class RootCommand : ICommand
 	{
-		private readonly CommandLineApplication _app;
+		public string Name => "root";
+		public string Description => "root description";
 
-		public RootCommand(CommandLineApplication app)
+
+		public RootCommand(ConsoleApplication app, IEnumerable<ICommand> commands)
 		{
 			_app = app;
+			_commands = commands;
 		}
 
-		public static void Configure(CommandLineApplication app, CommandLineOptions options)
-		{
-			app.Command("run", c => AutoRunner.Configure(c, options));
+		private readonly ConsoleApplication _app;
+		private readonly IEnumerable<ICommand> _commands;
 
-			app.OnExecute(() =>
+		
+		public ICommand Configure(CommandLineOptions options)
+		{
+			foreach (var command in _commands)
 			{
-				options.Command = new RootCommand(app);
+				_app.Command(command.Name, app =>
+				{
+					app.Description = command.Description;
+					app.HelpOption(Constants.HelpOptions);
+
+					app.OnExecute(() =>
+					{
+						options.Command = command.Configure(options);
+						return 0;
+					});
+
+				});
+			}
+
+			_app.OnExecute(() =>
+			{
+				options.Command = this;
 
 				return 0;
 			});
+
+			return this;
 		}
+
 
 		public int Run()
 		{
 			_app.ShowHelp();
-
 			return 1;
 		}
 	}

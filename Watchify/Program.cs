@@ -1,6 +1,7 @@
-﻿using Watchify.CommandLine;
-
-// ReSharper disable ArgumentsStyleLiteral
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Watchify.AutoRun;
+using Watchify.CommandLine;
 
 namespace Watchify
 {
@@ -8,14 +9,25 @@ namespace Watchify
 	{
 		private static int Main(string[] args)
 		{
-			var options = CommandLineOptions.Parse(args);
+			var services = new ServiceCollection();
 
-			if (options?.Command == null)
+			services.AddLogging(loggingBuider =>
 			{
-				return 1;
-			}
+				loggingBuider.AddConsole();
+			});
 
-			return options.Command.Run();
+
+			services.AddScoped<ConsoleApplication>();
+			services.AddScoped<CommandLineOptions>();
+			services.AddScoped<RootCommand>();
+			services.AddScoped<ICommand, AutoRunner>();
+
+			var options = services
+				.BuildServiceProvider()
+				.GetRequiredService<CommandLineOptions>()
+				.Parse(args);
+
+			return options?.Command?.Run() ?? 1;
 		}
 	}
 }
