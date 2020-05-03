@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Watchify": {
+      "commandName": "Project",
+      "commandLineArgs": "run \"C:\\data\\kode\\carweb\\commonbuild\\Microservices\\vehicleservice\\src\\VehicleService\""
+    }
+  }
+}
