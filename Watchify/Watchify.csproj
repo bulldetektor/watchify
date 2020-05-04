@@ -15,8 +15,8 @@
     <!-- Dotnet Tool -->
     <PackAsTool>true</PackAsTool>
     <ToolCommand>watchify</ToolCommand>
-    <PackageOutputPath>../.dist</PackageOutputPath>
-    <Version>0.2.2</Version>
+    <!-- <PackageOutputPath>../.dist</PackageOutputPath> -->
+    <Version>0.2.4</Version>
     <PackageId>Bulldetektor.Watchify</PackageId>
   </PropertyGroup>
 

@@ -41,7 +41,7 @@ namespace Watchify.AutoRun
 			try
 			{
 				_buildProcess.Exited += (s, a) => { ShowToast("Watchify exited"); };
-				_buildProcess.OutputDataReceived += (s, a) => { WriteProcessOutput(a.Data); };
+				_buildProcess.OutputDataReceived += (s, a) => { WriteOutput(a.Data); };
 				_buildProcess.ErrorDataReceived += (s, a) => { WriteError(a.Data); };
 
 				_buildProcess.Start();
@@ -59,8 +59,9 @@ namespace Watchify.AutoRun
 
 		private bool _hasReceivedFirstOutput;
 		private bool _isRestarting;
+		private bool _isStarting;
 
-		private void WriteProcessOutput(string output)
+		private void WriteOutput(string output)
 		{
 			if (output == null)
 				return;
@@ -73,25 +74,27 @@ namespace Watchify.AutoRun
 					WriteDebug($"Running (process: {_buildProcess.Id})");
 					_hasReceivedFirstOutput = true;
 				}
-				if (output.ToLowerInvariant().Trim() == "watch : started")
+
+				switch (output.ToLowerInvariant().Trim())
 				{
-					ShowToast("Watchify: Ready!");
-					WriteInfo("Ready!");
-				}
-				else if (output.ToLowerInvariant().Trim() == "watch : exited")
-				{
-					ShowToast("Watchify: Restarting...");
-					WriteInfo("Restarting");
-					_isRestarting = true;
+					case "watch : started":
+						_isStarting = true;
+						break;
+					case "watch : exited":
+						ShowToast("Watchify: Restarting...");
+						WriteInfo("Restarting");
+						_isRestarting = true;
+						break;
 				}
 			}
-			else if (_isRestarting)
+			else if (_isStarting || _isRestarting)
 			{
 				if (output.StartsWith("info:"))
 				{
 					ShowToast("Watchify: Ready!");
 					WriteInfo("Ready!");
 					_isRestarting = false;
+					_isStarting = false;
 				}
 			}
 
@@ -100,10 +103,14 @@ namespace Watchify.AutoRun
 
 		private static void WriteError(string error)
 		{
-			if (error == null)
+			if (error == null || string.IsNullOrWhiteSpace(error))
 				return;
 
-			ShowToast($"This means trouble: {error}");
+			if (error.ToLowerInvariant().StartsWith("watch : exited with error code"))
+			{
+				ShowToast("Watchify: Error building and running the app");
+			}
+
 			Console.ForegroundColor = ConsoleColor.DarkRed;
 			Console.WriteLine(error);
 			Console.ResetColor();
