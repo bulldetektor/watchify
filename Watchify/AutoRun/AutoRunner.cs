@@ -55,13 +55,15 @@ namespace Watchify.AutoRun
 
 			Console.WriteLine("");
 			Console.WriteLine("Watchify is running. Press 'X' to exit...");
+		
 			if (!string.IsNullOrEmpty(_appUrl))
 			{
 				if (Uri.TryCreate(_appUrl, UriKind.RelativeOrAbsolute, out var validUri))
 				{
-					Console.WriteLine($"Application will be available at {validUri.Scheme}://{validUri.Host}:{validUri.Port}");
+					Console.WriteLine($"Application will be available at {validUri.GetLeftPart(UriPartial.Authority)}");
 				}
 			}
+		
 			Console.WriteLine("");
 
 			while (true)
