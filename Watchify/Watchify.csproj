@@ -4,8 +4,6 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <AssemblyVersion>0.3.0.0</AssemblyVersion>
-    <FileVersion>0.3.0.0</FileVersion>
     <Copyright>Bulldetektor 2020</Copyright>
     <Company>Bulldetektor</Company>
     <Authors>Kjetil Klaussen</Authors>
@@ -15,8 +13,6 @@
     <!-- Dotnet Tool -->
     <PackAsTool>true</PackAsTool>
     <ToolCommand>watchify</ToolCommand>
-    <!-- <PackageOutputPath>../.dist</PackageOutputPath> -->
-    <Version>0.3.0</Version>
     <PackageId>Bulldetektor.Watchify</PackageId>
   </PropertyGroup>
 

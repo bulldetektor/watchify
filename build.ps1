@@ -1,11 +1,15 @@
+[CmdletBinding(SupportsShouldProcess)]
 param (
     [string]$target = "all",
-    [string]$build_config = "release",
-    [string]$azure_deploy_pwd = ""
+    [string]$buildConfig = "release",
+    [switch]$incrementMajor = $false,
+    [switch]$incrementMinor = $false,
+    [switch]$incrementPatch = $false
 )
 
 . .\build_helper.ps1
 
+$build_props_file = (Get-ChildItem "Directory.Build.props")
 $build_folder = "./.build"
 $test_results_folder = "./.test-results"
 $dist_folder = "./.dist"
@@ -28,9 +32,42 @@ function Restore() {
     }
 }
 
+function Version(){
+    [CmdletBinding(SupportsShouldProcess=$true)]
+    param()
+    
+    Run-task "Version" {
+        [xml]$proj_props = Get-Content $build_props_file
+        $current_version = [System.Version]$proj_props.Project.PropertyGroup.Version
+    
+        $revision_number = 0
+        
+        if ($incrementMajor){
+            $version = [System.Version]::new("$($current_version.Major + 1).0.0.$revision_number");
+        }
+        elseif ($incrementMinor){
+            $version = [System.Version]::new("$($current_version.Major).$($current_version.Minor + 1).0.$revision_number");
+        }
+        elseif ($incrementPatch){
+            $version = [System.Version]::new("$($current_version.Major).$($current_version.Minor).$($current_version.Build + 1).$revision_number");
+        }
+        else{
+            $version = $current_version
+        }
+    
+        if ($version -ne $current_version){
+            Write-Host "Incrementing version from $($current_version) to $version"
+            $proj_props.Project.PropertyGroup.Version = $version
+            if ($PSCmdlet.ShouldProcess("$($build_props_file.Name)", "Save")){
+                $proj_props.Save($build_props_file);
+            }
+        }
+    }
+}
+
 function Build() {
     Run-Task "Build" {
-        dotnet build -o $build_folder -c $build_config --no-incremental --no-restore 
+        dotnet build -o $build_folder -c $buildConfig --no-incremental --no-restore
     }
 }
 
@@ -65,11 +102,15 @@ $target -split "," | ForEach-Object {
         "all" { 
             Clean
             Restore
+            Version
             Build
             Publish
         }
         "clean" {
             Clean
+        }
+        "version" {
+            Version
         }
         "build-only" {
             Build
@@ -94,13 +135,15 @@ $target -split "," | ForEach-Object {
         "pre-deploy" {
             Clean
             Restore
+            Version
             Build
-            Publish
+            # Publish
             Package-Tool
         }
         "deploy-local" {
             Clean
             Restore
+            Version
             Build
             Package-Tool
             Install-Tool
