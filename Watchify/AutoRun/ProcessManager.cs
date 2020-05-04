@@ -58,13 +58,14 @@ namespace Watchify.AutoRun
 		}
 
 		private bool _hasReceivedFirstOutput;
+		private bool _isRestarting;
 
 		private void WriteProcessOutput(string output)
 		{
 			if (output == null)
 				return;
 
-			if (output.StartsWith("watch"))
+			if (output.StartsWith("watch") && !_isRestarting)
 			{
 				if (!_hasReceivedFirstOutput)
 				{
@@ -72,10 +73,25 @@ namespace Watchify.AutoRun
 					WriteDebug($"Running (process: {_buildProcess.Id})");
 					_hasReceivedFirstOutput = true;
 				}
-				else if (output.ToLowerInvariant().Trim() == "watch : started")
+				if (output.ToLowerInvariant().Trim() == "watch : started")
 				{
 					ShowToast("Watchify: Ready!");
 					WriteInfo("Ready!");
+				}
+				else if (output.ToLowerInvariant().Trim() == "watch : exited")
+				{
+					ShowToast("Watchify: Restarting...");
+					WriteInfo("Restarting");
+					_isRestarting = true;
+				}
+			}
+			else if (_isRestarting)
+			{
+				if (output.StartsWith("info:"))
+				{
+					ShowToast("Watchify: Ready!");
+					WriteInfo("Ready!");
+					_isRestarting = false;
 				}
 			}
 
