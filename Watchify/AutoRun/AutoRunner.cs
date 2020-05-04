@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Watchify.CommandLine;
@@ -10,14 +13,17 @@ namespace Watchify.AutoRun
 		public string Name => "run";
 		public string Description => "Re-build and run your project when changes are detected";
 
-		public AutoRunner(ProcessManager processManager, ILogger<AutoRunner> logger)
+		public AutoRunner(ProcessManager processManager, LaunchProfileParser launchProfileParser, ILogger<AutoRunner> logger)
 		{
 			_processManager = processManager;
+			_launchProfileParser = launchProfileParser;
 			_logger = logger;
 		}
 
 		private readonly ProcessManager _processManager;
+		private readonly LaunchProfileParser _launchProfileParser;
 		private readonly ILogger<AutoRunner> _logger;
+		private string _appUrl;
 
 
 		public ICommand Configure(CommandLineOptions options)
@@ -33,14 +39,29 @@ namespace Watchify.AutoRun
 		{
 			_logger.LogDebug($"Running project at {_options.ProjectDir.FullName}");
 
-			_processManager.Start(_options);
-			if (_processManager == null)
-				return -1;
+			Task
+				.Run(async () =>
+				{
+					_appUrl = await _launchProfileParser.GetApplicationUrl(_options.ProjectDir, _options.LaunchProfileName ?? "Development");
+
+					await _processManager.Start(_options);
+					if (_processManager == null)
+						return -1;
+					return 0;
+				})
+				.Wait();
 
 			Console.CancelKeyPress += (s, a) => _processManager.Stop();
 
 			Console.WriteLine("");
 			Console.WriteLine("Watchify is running. Press 'X' to exit...");
+			if (!string.IsNullOrEmpty(_appUrl))
+			{
+				if (Uri.TryCreate(_appUrl, UriKind.RelativeOrAbsolute, out var validUri))
+				{
+					Console.WriteLine($"Application will be available at {validUri.Scheme}://{validUri.Host}:{validUri.Port}");
+				}
+			}
 			Console.WriteLine("");
 
 			while (true)

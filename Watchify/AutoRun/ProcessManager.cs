@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Windows.UI.Notifications;
 using Watchify.CommandLine;
 
@@ -10,7 +11,7 @@ namespace Watchify.AutoRun
 		private Process _buildProcess;
 		private CommandLineOptions _options;
 
-		public ProcessManager Start(CommandLineOptions options)
+		public async Task<ProcessManager> Start(CommandLineOptions options)
 		{
 			_options = options;
 
@@ -40,13 +41,16 @@ namespace Watchify.AutoRun
 
 			try
 			{
-				_buildProcess.Exited += (s, a) => { ShowToast("Watchify exited"); };
-				_buildProcess.OutputDataReceived += (s, a) => { WriteOutput(a.Data); };
-				_buildProcess.ErrorDataReceived += (s, a) => { WriteError(a.Data); };
+				await Task.Run(() =>
+				{
+					_buildProcess.Exited += (s, a) => { ShowToast("Watchify exited"); };
+					_buildProcess.OutputDataReceived += (s, a) => { WriteOutput(a.Data); };
+					_buildProcess.ErrorDataReceived += (s, a) => { WriteError(a.Data); };
 
-				_buildProcess.Start();
-				_buildProcess.BeginOutputReadLine();
-				_buildProcess.BeginErrorReadLine();
+					_buildProcess.Start();
+					_buildProcess.BeginOutputReadLine();
+					_buildProcess.BeginErrorReadLine();
+				});
 
 				return this;
 			}

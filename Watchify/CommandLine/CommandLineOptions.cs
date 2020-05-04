@@ -11,6 +11,7 @@ namespace Watchify.CommandLine
 		public ICommand Command { get; set; }
 		public DirectoryInfo ProjectDir { get; private set; }
 		public bool IsVerboseLoggingEnabled { get; private set; }
+		public string LaunchProfileName { get; private set; }
 
 
 		public CommandLineOptions(ConsoleApplication app, RootCommand rootCommand, LoggingLevelSwitch logLevelSwitch)
@@ -37,6 +38,11 @@ namespace Watchify.CommandLine
 				"Verbose logging",
 				CommandOptionType.NoValue);
 
+			var launchProfile = _app.Option(
+				"--launch-profile",
+				"The launch profile to use when watching the project for changes",
+				CommandOptionType.SingleValue);
+
 			_rootCommand.Configure(this);
 
 			var result = _app.Execute(args);
@@ -45,6 +51,7 @@ namespace Watchify.CommandLine
 			IsVerboseLoggingEnabled = isVerboseLoggingEnabled.HasValue();
 			if (IsVerboseLoggingEnabled)
 				_logLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
+			LaunchProfileName = launchProfile.Value();
 
 			return result != 0 ? null : this;
 		}

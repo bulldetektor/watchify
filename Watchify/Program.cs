@@ -32,6 +32,7 @@ namespace Watchify
 			services.AddScoped<RootCommand>();
 			services.AddScoped<ICommand, AutoRunner>();
 			services.AddScoped<ProcessManager>();
+			services.AddScoped<LaunchProfileParser>();
 
 			ConfigureLogging(services);
 			
