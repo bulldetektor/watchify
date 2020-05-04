@@ -1,21 +1,24 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using Windows.UI.Notifications;
+using Watchify.CommandLine;
 
 namespace Watchify.AutoRun
 {
 	public class ProcessManager : IDisposable
 	{
 		private Process _buildProcess;
+		private CommandLineOptions _options;
 
-		public void Start(DirectoryInfo projectDir)
+		public ProcessManager Start(CommandLineOptions options)
 		{
+			_options = options;
+
 			var args = new[]
 			{
 				"watch",
 				"--project",
-				projectDir.FullName,
+				_options.ProjectDir.FullName,
 				"run"
 			};
 			_buildProcess = new Process
@@ -37,15 +40,18 @@ namespace Watchify.AutoRun
 			{
 				_buildProcess.Exited += (s, a) => { ShowToast("Watchify exited"); };
 				_buildProcess.OutputDataReceived += (s, a) => { WriteProcessOutput(a.Data); };
-				_buildProcess.ErrorDataReceived += (s, a) => { WriteProcessError(a.Data); };
+				_buildProcess.ErrorDataReceived += (s, a) => { WriteError(a.Data); };
 
 				_buildProcess.Start();
 				_buildProcess.BeginOutputReadLine();
 				_buildProcess.BeginErrorReadLine();
+
+				return this;
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine("Failed to start process: " + ex.Message);
+				WriteError("Failed to start process: " + ex.Message);
+				return null;
 			}
 		}
 
@@ -59,8 +65,7 @@ namespace Watchify.AutoRun
 
 			if (_isWaitingForStart)
 			{
-				Console.ForegroundColor = ConsoleColor.DarkGreen;
-				Console.WriteLine("App starting up");
+				WriteInfo("App starting up...");
 				ShowToast("Watchify: App is starting up!");
 				_isWaitingForStart = false;
 				_hasReceivedFirstOutput = false;
@@ -68,18 +73,15 @@ namespace Watchify.AutoRun
 
 			if (output.StartsWith("watch") && !_hasReceivedFirstOutput)
 			{
-				Console.WriteLine($"Running (process: {_buildProcess.Id})");
-				ShowToast($"Watchify: {output.Substring("watch : ".Length)}");
+				WriteDebug($"Running (process: {_buildProcess.Id})");
 				_hasReceivedFirstOutput = true;
 				_isWaitingForStart = true;
 			}
 
-			Console.ForegroundColor = ConsoleColor.DarkYellow;
-			Console.WriteLine(output);
-			Console.ResetColor();
+			WriteDebug(output);
 		}
 
-		private static void WriteProcessError(string error)
+		private static void WriteError(string error)
 		{
 			if (error == null)
 				return;
@@ -87,6 +89,22 @@ namespace Watchify.AutoRun
 			ShowToast($"This means trouble: {error}");
 			Console.ForegroundColor = ConsoleColor.DarkRed;
 			Console.WriteLine(error);
+			Console.ResetColor();
+		}
+
+		private static void WriteInfo(string message)
+		{
+			Console.ForegroundColor = ConsoleColor.DarkGreen;
+			Console.WriteLine(message);
+			Console.ResetColor();
+		}
+
+		private void WriteDebug(string message)
+		{
+			if (!_options.IsVerboseLoggingEnabled)
+				return;
+			Console.ForegroundColor = ConsoleColor.DarkYellow;
+			Console.WriteLine(message);
 			Console.ResetColor();
 		}
 
@@ -107,9 +125,9 @@ namespace Watchify.AutoRun
 
 		public void Stop()
 		{
-			if(_buildProcess == null)
+			if (_buildProcess == null)
 				return;
-			
+
 			_buildProcess.Kill();
 			_buildProcess = null;
 		}

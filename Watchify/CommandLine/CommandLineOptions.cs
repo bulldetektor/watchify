@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using Microsoft.Extensions.CommandLineUtils;
+using Serilog.Core;
+using Serilog.Events;
 
 namespace Watchify.CommandLine
 {
@@ -8,18 +10,21 @@ namespace Watchify.CommandLine
 	{
 		public ICommand Command { get; set; }
 		public DirectoryInfo ProjectDir { get; private set; }
+		public bool IsVerboseLoggingEnabled { get; private set; }
 
 
-		public CommandLineOptions(ConsoleApplication app, RootCommand rootCommand)
+		public CommandLineOptions(ConsoleApplication app, RootCommand rootCommand, LoggingLevelSwitch logLevelSwitch)
 		{
 			_app = app;
 			_rootCommand = rootCommand;
+			_logLevelSwitch = logLevelSwitch;
 		}
 
 		private readonly ConsoleApplication _app;
 		private readonly RootCommand _rootCommand;
+		private readonly LoggingLevelSwitch _logLevelSwitch;
 
-		
+
 		public CommandLineOptions Parse(string[] args)
 		{
 			var projectDirInput = _app.Option(
@@ -27,14 +32,23 @@ namespace Watchify.CommandLine
 				"Path to directory containing the project you want to run and watch (defaults to current directory)",
 				CommandOptionType.SingleValue);
 
+			var isVerboseLoggingEnabled = _app.Option(
+				"-v|--verbose",
+				"Verbose logging",
+				CommandOptionType.NoValue);
+
 			_rootCommand.Configure(this);
 
 			var result = _app.Execute(args);
 				
 			ProjectDir = GetProjectDir(projectDirInput);
+			IsVerboseLoggingEnabled = isVerboseLoggingEnabled.HasValue();
+			if (IsVerboseLoggingEnabled)
+				_logLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
 
 			return result != 0 ? null : this;
 		}
+
 
 		private static DirectoryInfo GetProjectDir(CommandOption projectDirInput)
 		{
