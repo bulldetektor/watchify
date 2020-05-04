@@ -53,7 +53,7 @@ namespace Watchify.AutoRun
 				}
 			}
 
-			Task.Delay(1000).Wait();
+			Task.Delay(200).Wait();
 			return 1;
 		}
 

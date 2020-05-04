@@ -17,9 +17,11 @@ namespace Watchify.AutoRun
 			var args = new[]
 			{
 				"watch",
+				"--verbose",
 				"--project",
 				_options.ProjectDir.FullName,
-				"run"
+				"run",
+				"-- --Logging:LogLevel:Default=Debug"
 			};
 			_buildProcess = new Process
 			{
@@ -56,26 +58,25 @@ namespace Watchify.AutoRun
 		}
 
 		private bool _hasReceivedFirstOutput;
-		private bool _isWaitingForStart;
 
 		private void WriteProcessOutput(string output)
 		{
 			if (output == null)
 				return;
 
-			if (_isWaitingForStart)
+			if (output.StartsWith("watch"))
 			{
-				WriteInfo("App starting up...");
-				ShowToast("Watchify: App is starting up!");
-				_isWaitingForStart = false;
-				_hasReceivedFirstOutput = false;
-			}
-
-			if (output.StartsWith("watch") && !_hasReceivedFirstOutput)
-			{
-				WriteDebug($"Running (process: {_buildProcess.Id})");
-				_hasReceivedFirstOutput = true;
-				_isWaitingForStart = true;
+				if (!_hasReceivedFirstOutput)
+				{
+					WriteInfo("Starting up...");
+					WriteDebug($"Running (process: {_buildProcess.Id})");
+					_hasReceivedFirstOutput = true;
+				}
+				else if (output.ToLowerInvariant().Trim() == "watch : started")
+				{
+					ShowToast("Watchify: Ready!");
+					WriteInfo("Ready!");
+				}
 			}
 
 			WriteDebug(output);
