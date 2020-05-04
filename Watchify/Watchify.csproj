@@ -14,6 +14,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommand>watchify</ToolCommand>
     <PackageId>Bulldetektor.Watchify</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>

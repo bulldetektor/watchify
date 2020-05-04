@@ -35,7 +35,7 @@ function Restore() {
 function Version(){
     [CmdletBinding(SupportsShouldProcess=$true)]
     param()
-    
+
     Run-task "Version" {
         [xml]$proj_props = Get-Content $build_props_file
         $current_version = [System.Version]$proj_props.Project.PropertyGroup.Version
@@ -83,16 +83,32 @@ function Package-Tool() {
     }
 }
 
-function Install-Tool() {
-    Run-Task "Install-Tool" {
+function Install-Unpublished() {
+    Run-Task "Install-Unpublished" {
         dotnet tool uninstall --global $tool_name
         dotnet tool install --global --add-source $dist_folder $tool_name
     }
 }
 
+function Install-Offical() {
+    Run-Task "Install-Offical" {
+        dotnet tool uninstall --global $tool_name
+        dotnet tool install --global $tool_name
+    }
+}
+
 function Deploy() {
     Run-Task "Deploy" {
-        Write-Error "TODO: Publish to nuget.org"
+        
+        $pck_file = Get-ChildItem $dist_folder -Filter "*.nupkg" | Sort-Object -Descending | Select-Object -First 1
+        $confirmed = Read-Host "Uploading package $pck_file to Nuget.org - Continue? [y/n]"
+        if($confirmed -eq "y"){
+            $nugetApiKey = Read-Host "API key to use when pushing package to Nuget.org: "
+            dotnet nuget push $pck_file -k $nugetApiKey -s https://api.nuget.org/v3/index.json --skip-duplicate
+        }
+        else{
+            Write-Information "Upload aborted"
+        }
     }
 }
 
@@ -129,8 +145,8 @@ $target -split "," | ForEach-Object {
         "package" {
             Package-Tool
         }
-        "install" {
-            Install-Tool
+        "install-unpublished" {
+            Install-Unpublished
         }
         "pre-deploy" {
             Clean
@@ -146,10 +162,13 @@ $target -split "," | ForEach-Object {
             Version
             Build
             Package-Tool
-            Install-Tool
+            Install-Unpublished
         }
         "deploy"{
             Deploy
+        }
+        "install" {
+            Install-Offical
         }
         Default { 
             throw "Unknown target"
