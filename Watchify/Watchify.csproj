@@ -4,17 +4,22 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Copyright>Bulldetektor 2020</Copyright>
-    <Company>Bulldetektor</Company>
+    <!-- Owner -->
     <Authors>Kjetil Klaussen</Authors>
+    <Company>Bulldetektor</Company>
+    <Copyright>Copyright (c) Kjetil Klaussen 2020</Copyright>
+    <!-- Repository-->
     <RepositoryUrl>https://github.com/bulldetektor/watchify</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-
     <!-- Dotnet Tool -->
     <PackAsTool>true</PackAsTool>
     <ToolCommand>watchify</ToolCommand>
+    <!-- Packaging -->
+    <Description>Watch dotnet builds with visual feedback</Description>
     <PackageId>Bulldetektor.Watchify</PackageId>
+    <PackageProjectUrl>https://github.com/bulldetektor/watchify</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>dotnet;global-tools;watch;utility;</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
