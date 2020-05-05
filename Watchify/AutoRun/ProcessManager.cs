@@ -2,141 +2,85 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.UI.Notifications;
-using Watchify.CommandLine;
 
 namespace Watchify.AutoRun
 {
-	public class ProcessManager : IDisposable
+	public abstract class ProcessManager : IDisposable
 	{
-		private Process _buildProcess;
-		private CommandLineOptions _options;
+		protected abstract string ProcessToStart { get; }
+		protected abstract string[] ProcessArgs { get; }
+		protected abstract ConsoleColor InfoColor { get; }
+		protected abstract ConsoleColor ErrorColor { get; }
+		protected abstract ConsoleColor DebugColor { get; }
 
-		public async Task<ProcessManager> Start(CommandLineOptions options)
+		protected abstract void OnExit(object sender, EventArgs args);
+		protected abstract void HandleOutput(string message);
+		protected abstract void HandleError(string message);
+
+
+		protected Process RunningProcess;
+		private bool _isVerboseLoggingEnabled;
+
+		public ProcessManager WithLogVerbosity(bool isVerboseLoggingEnabled)
 		{
-			_options = options;
+			_isVerboseLoggingEnabled = isVerboseLoggingEnabled;
+			return this;
+		}
 
-			var args = new[]
+		public async Task<ProcessManager> Start()
+		{
+			if (Uri.TryCreate(ProcessToStart, UriKind.Absolute, out _))
 			{
-				"watch",
-				"--verbose",
-				"--project",
-				_options.ProjectDir.FullName,
-				"run",
-				"-- --Logging:LogLevel:Default=Debug"
-			};
-			_buildProcess = new Process
+				RunningProcess = new Process
+				{
+					StartInfo = new ProcessStartInfo(ProcessToStart)
+					{
+						UseShellExecute = true,
+						Verb = "open"
+					}
+				};
+			}
+			else
 			{
-				StartInfo =
+				RunningProcess = new Process
+				{
+					StartInfo =
 				{
 					UseShellExecute = false,
 					RedirectStandardOutput = true,
 					RedirectStandardError = true,
 					WindowStyle = ProcessWindowStyle.Hidden,
 					CreateNoWindow = true,
-					FileName = "dotnet",
-					Arguments = string.Join(" ", args)
+					FileName = ProcessToStart,
+					Arguments = string.Join(" ", ProcessArgs)
 				},
-				EnableRaisingEvents = true,
-			};
+					EnableRaisingEvents = true,
+				};
+			}
 
 			try
 			{
 				await Task.Run(() =>
 				{
-					_buildProcess.Exited += (s, a) => { ShowToast("Watchify exited"); };
-					_buildProcess.OutputDataReceived += (s, a) => { WriteOutput(a.Data); };
-					_buildProcess.ErrorDataReceived += (s, a) => { WriteError(a.Data); };
+					RunningProcess.Exited += OnExit;
+					RunningProcess.OutputDataReceived += (s, a) => { HandleOutput(a.Data); };
+					RunningProcess.ErrorDataReceived += (s, a) => { HandleError(a.Data); };
 
-					_buildProcess.Start();
-					_buildProcess.BeginOutputReadLine();
-					_buildProcess.BeginErrorReadLine();
+					RunningProcess.Start();
+					RunningProcess.BeginOutputReadLine();
+					RunningProcess.BeginErrorReadLine();
 				});
 
 				return this;
 			}
 			catch (Exception ex)
 			{
-				WriteError("Failed to start process: " + ex.Message);
+				HandleError("Failed to start process: " + ex.Message);
 				return null;
 			}
 		}
 
-		private bool _hasReceivedFirstOutput;
-		private bool _isRestarting;
-		private bool _isStarting;
-
-		private void WriteOutput(string output)
-		{
-			if (output == null)
-				return;
-
-			if (output.StartsWith("watch") && !_isRestarting)
-			{
-				if (!_hasReceivedFirstOutput)
-				{
-					WriteInfo("Starting up...");
-					WriteDebug($"Running (process: {_buildProcess.Id})");
-					_hasReceivedFirstOutput = true;
-				}
-
-				switch (output.ToLowerInvariant().Trim())
-				{
-					case "watch : started":
-						_isStarting = true;
-						break;
-					case "watch : exited":
-						ShowToast("Watchify: Restarting...");
-						WriteInfo("Restarting");
-						_isRestarting = true;
-						break;
-				}
-			}
-			else if (_isStarting || _isRestarting)
-			{
-				if (output.StartsWith("info:"))
-				{
-					ShowToast("Watchify: Ready!");
-					WriteInfo("Ready!");
-					_isRestarting = false;
-					_isStarting = false;
-				}
-			}
-
-			WriteDebug(output);
-		}
-
-		private static void WriteError(string error)
-		{
-			if (error == null || string.IsNullOrWhiteSpace(error))
-				return;
-
-			if (error.ToLowerInvariant().StartsWith("watch : exited with error code"))
-			{
-				ShowToast("Watchify: Error building and running the app");
-			}
-
-			Console.ForegroundColor = ConsoleColor.DarkRed;
-			Console.WriteLine(error);
-			Console.ResetColor();
-		}
-
-		private static void WriteInfo(string message)
-		{
-			Console.ForegroundColor = ConsoleColor.DarkGreen;
-			Console.WriteLine(message);
-			Console.ResetColor();
-		}
-
-		private void WriteDebug(string message)
-		{
-			if (!_options.IsVerboseLoggingEnabled)
-				return;
-			Console.ForegroundColor = ConsoleColor.DarkYellow;
-			Console.WriteLine(message);
-			Console.ResetColor();
-		}
-
-		private static void ShowToast(string message)
+		protected static void ShowToast(string message)
 		{
 			var toastTemplate = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText01);
 
@@ -151,19 +95,41 @@ namespace Watchify.AutoRun
 			notifier.Show(notification);
 		}
 
-		public void Stop()
+
+		protected void WriteInfo(string message)
 		{
-			if (_buildProcess == null)
+			Console.ForegroundColor = InfoColor;
+			Console.WriteLine(message);
+			Console.ResetColor();
+		}
+
+		protected void WriteError(string message)
+		{
+			if (string.IsNullOrWhiteSpace(message))
 				return;
 
-			_buildProcess.Kill();
-			_buildProcess = null;
+			Console.ForegroundColor = ErrorColor;
+			Console.WriteLine(message);
+			Console.ResetColor();
 		}
 
-		public void Dispose()
+		protected void WriteDebug(string message)
 		{
-			Stop();
+			if (!_isVerboseLoggingEnabled)
+				return;
+			Console.ForegroundColor = DebugColor;
+			Console.WriteLine(message);
+			Console.ResetColor();
 		}
 
+
+		public virtual void Dispose()
+		{
+			if (RunningProcess == null)
+				return;
+
+			RunningProcess.Kill();
+			RunningProcess = null;
+		}
 	}
 }

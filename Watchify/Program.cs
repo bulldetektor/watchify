@@ -20,16 +20,16 @@ namespace Watchify
 			return options?.Command?.Run() ?? 1;
 		}
 
-		private static ServiceCollection ConfigureServices()
+		private static IServiceCollection ConfigureServices()
 		{
-			var services = new ServiceCollection();
-
-			services.AddScoped<ConsoleApplication>();
-			services.AddScoped<CommandLineOptions>();
-			services.AddScoped<RootCommand>();
-			services.AddScoped<ICommand, AutoRunner>();
-			services.AddScoped<ProcessManager>();
-			services.AddScoped<LaunchProfileParser>();
+			var services = new ServiceCollection()
+				.AddScoped<ConsoleApplication>()
+				.AddScoped<CommandLineOptions>()
+				.AddScoped<RootCommand>()
+				.AddScoped<ICommand, AutoRunner>()
+				.AddScoped<RunWatchProcessManager>()
+				.AddScoped<ProxyServerProcessManager>()
+				.AddScoped<LaunchSettingsParser>();
 
 			ConfigureLogging(services);
 			
