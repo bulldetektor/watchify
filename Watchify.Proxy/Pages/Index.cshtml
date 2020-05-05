@@ -1,0 +1,14 @@
+﻿@page
+@model Watchify.Proxy.Pages.IndexPageModel
+@{
+    ViewData["Title"] = "StartPage";
+}
+
+<h1>StartPage</h1>
+
+<div>
+    Current status: @Model.State.Status
+    <br />
+    Proxying for <a href="@Model.Settings.ProxyTo">@Model.Settings.ProxyTo</a>
+</div>
+
