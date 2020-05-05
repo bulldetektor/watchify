@@ -1,8 +1,12 @@
 {
   "profiles": {
-    "Watchify": {
+    "Watchify VehicleSrv": {
       "commandName": "Project",
       "commandLineArgs": "-p \"C:\\data\\kode\\carweb\\commonbuild\\Microservices\\vehicleservice\\src\\VehicleService\" -v run"
-    }
+    },
+    "Watchify Tidsnok": {
+      "commandName": "Project",
+      "commandLineArgs": "-p \"C:\\data\\kode\\priv\\Tidsnok\\src\\Api\" -v run"
+    },
   }
 }

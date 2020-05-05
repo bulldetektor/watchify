@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Watchify", "Watchify\Watchify.csproj", "{02FF9063-C2A6-4B0B-9CF8-06C96C1703B1}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Watchify.Proxy", "Watchify.Proxy\Watchify.Proxy.csproj", "{C2E670FC-058C-4576-B3D2-59BE9848D22E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Watchify.Tests.Unit", "Watchify.Tests.Unit\Watchify.Tests.Unit.csproj", "{9FBD2AF8-D7FE-4262-9B22-C1FED4BA6D02}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{02FF9063-C2A6-4B0B-9CF8-06C96C1703B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02FF9063-C2A6-4B0B-9CF8-06C96C1703B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02FF9063-C2A6-4B0B-9CF8-06C96C1703B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2E670FC-058C-4576-B3D2-59BE9848D22E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2E670FC-058C-4576-B3D2-59BE9848D22E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2E670FC-058C-4576-B3D2-59BE9848D22E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2E670FC-058C-4576-B3D2-59BE9848D22E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FBD2AF8-D7FE-4262-9B22-C1FED4BA6D02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FBD2AF8-D7FE-4262-9B22-C1FED4BA6D02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FBD2AF8-D7FE-4262-9B22-C1FED4BA6D02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FBD2AF8-D7FE-4262-9B22-C1FED4BA6D02}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
