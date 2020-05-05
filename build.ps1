@@ -120,7 +120,7 @@ $target -split "," | ForEach-Object {
             Restore
             Version
             Build
-            Publish
+            # Publish
         }
         "clean" {
             Clean
