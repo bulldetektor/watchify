@@ -62,6 +62,7 @@ function Version(){
                 $proj_props.Save($build_props_file);
             }
         }
+        Write-Host "Version: $current_version"
     }
 }
 

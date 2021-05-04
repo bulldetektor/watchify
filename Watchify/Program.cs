@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
@@ -13,6 +15,7 @@ namespace Watchify
 		{
 			var serviceProvider = ConfigureServices().BuildServiceProvider();
 
+			Console.WriteLine("Args: " + string.Join(',', args));
 			var options = serviceProvider
 				.GetRequiredService<CommandLineOptions>()
 				.Parse(args);

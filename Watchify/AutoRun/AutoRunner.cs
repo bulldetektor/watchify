@@ -112,12 +112,4 @@ namespace Watchify.AutoRun
 
 	}
 
-	public static class JsonExtensions
-	{
-		public static StringContent ToJsonContent(this object obj)
-		{
-			var json = JsonSerializer.Serialize(obj);//, new JsonSerializerOptions { IgnoreNullValues = true, IgnoreReadOnlyProperties = true });
-			return new StringContent(json, Encoding.UTF8, "application/json");
-		}
-	}
 }

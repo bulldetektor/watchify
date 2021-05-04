@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Watchify.Proxy.Api;
@@ -54,6 +56,16 @@ namespace Watchify.AutoRun
 			_proxyHost?.StopAsync().Wait(3000);
 
 			base.Dispose();
+		}
+	}
+
+	
+	public static class JsonExtensions
+	{
+		public static StringContent ToJsonContent(this object obj)
+		{
+			var json = JsonSerializer.Serialize(obj);//, new JsonSerializerOptions { IgnoreNullValues = true, IgnoreReadOnlyProperties = true });
+			return new StringContent(json, Encoding.UTF8, "application/json");
 		}
 	}
 }
